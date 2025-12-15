@@ -1,23 +1,21 @@
 import numpy as np
-import random
-from src.utils import SYMBOL_WATER, SYMBOL_SHIP, SHIP_SIZES
-from src.ship_input import is_valid_placement, place_ship
+from src.ship_input import is_valid_placement, place_ship, SHIP_SIZES
+from src.utils import SYMBOL_WATER
+
+BOARD_SIZE = 10
 
 def generate_bot_board():
-    """Generates a board with ships placed randomly for the bot."""
-    board = np.full((10, 10), SYMBOL_WATER, dtype=str)
+    bot_board = np.full((BOARD_SIZE, BOARD_SIZE), SYMBOL_WATER, dtype=str)
     
-    for size in SHIP_SIZES.values():
+    for name, size in SHIP_SIZES.items():
         placed = False
         while not placed:
-            # Random starting position
-            r = random.randint(0, 9)
-            c = random.randint(0, 9)
+            r = np.random.randint(0, BOARD_SIZE)
+            c = np.random.randint(0, BOARD_SIZE)
+            orientation = np.random.choice(['h', 'v'])
             
-            # Random direction
-            direction = random.choice(['H', 'V'])
-            
-            if is_valid_placement(board, r, c, size, direction):
-                place_ship(board, r, c, size, direction)
+            if is_valid_placement(bot_board, r, c, size, orientation):
+                bot_board = place_ship(bot_board, r, c, size, orientation)
                 placed = True
-    return board
+                
+    return bot_board

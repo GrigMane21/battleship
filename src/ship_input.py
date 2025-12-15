@@ -1,67 +1,68 @@
 import numpy as np
-from src.utils import SYMBOL_WATER, SYMBOL_SHIP, SHIP_SIZES, get_board_display
+from src.utils import SYMBOL_WATER, SYMBOL_SHIP, get_board_display
 
-def is_valid_placement(board, r, c, size, direction):
-    """
-    Checks if a ship can be placed at the given location without overlap or going off-board.
-    Also ensures a 1-cell buffer around the ship.
-    """
-    rows, cols = board.shape
-    r_end, c_end = r, c
-    
-    if direction == 'H':
-        c_end += size
-        if c_end > cols:
-            return False
-    else: 
-        r_end += size
-        if r_end > rows:
-            return False
+BOARD_SIZE = 10
+SHIP_SIZES = {
+    "Carrier": 5,
+    "Battleship": 4,
+    "Cruiser": 3,
+    "Submarine": 3,
+    "Destroyer": 2
+}
 
-    
-    for i in range(r - 1, r_end + 1):
-        for j in range(c - 1, c_end + 1):
-            if 0 <= i < rows and 0 <= j < cols:
-                if board[i, j] == SYMBOL_SHIP:
-                    return False
+def is_valid_placement(board, r, c, size, orientation):
+    if orientation == 'h':
+        if c + size > BOARD_SIZE:
+            return False
+        for i in range(size):
+            if board[r, c + i] == SYMBOL_SHIP:
+                return False
+    elif orientation == 'v':
+        if r + size > BOARD_SIZE:
+            return False
+        for i in range(size):
+            if board[r + i, c] == SYMBOL_SHIP:
+                return False
+    else:
+        return False
     return True
 
-def place_ship(board, r, c, size, direction):
-    """Places a ship on the board."""
-    if direction == 'H':
-        board[r, c:c + size] = SYMBOL_SHIP
-    else: 
-        board[r:r + size, c] = SYMBOL_SHIP
+def place_ship(board, r, c, size, orientation):
+    if orientation == 'h':
+        for i in range(size):
+            board[r, c + i] = SYMBOL_SHIP
+    elif orientation == 'v':
+        for i in range(size):
+            board[r + i, c] = SYMBOL_SHIP
+    return board
 
 def get_player_board_setup():
-    """Prompts the player to place all ships on the board."""
-    board = np.full((10, 10), SYMBOL_WATER, dtype=str)
+    player_board = np.full((BOARD_SIZE, BOARD_SIZE), SYMBOL_WATER, dtype=str)
     
     for name, size in SHIP_SIZES.items():
-        while True:
-            print(get_board_display(board, hide_ships=False))
-            print(f"Placing {name} (Size: {size})")
-            
+        placed = False
+        while not placed:
+            print(get_board_display(player_board, hide_ships=False))
+            print(f"(Placing {name} (Size: {size})")
             
             try:
-                coords = input("Enter starting coordinates (Row,Col e.g., 0,0): ")
-                r, c = map(int, coords.split(','))
-                if not (0 <= r < 10 and 0 <= c < 10):
-                    raise ValueError
-            except:
+                coords_input = input("Enter starting coordinates (Row,Col e.g., 0,0): ")
+                r_str, c_str = coords_input.split(',')
+                r, c = int(r_str.strip()), int(c_str.strip())
+            except ValueError:
                 print("Invalid coordinates. Must be R,C (0-9).")
                 continue
-
-            
-            direction = input("Enter direction (H for Horizontal, V for Vertical): ").upper()
-            if direction not in ['H', 'V']:
-                print("Invalid direction. Must be H or V.")
+                
+            if not (0 <= r < BOARD_SIZE and 0 <= c < BOARD_SIZE):
+                print("Coordinates out of bounds (0-9).")
                 continue
-
-            if is_valid_placement(board, r, c, size, direction):
-                place_ship(board, r, c, size, direction)
-                break
+                
+            orientation = input("Enter orientation (v/h): ").lower().strip()
+            
+            if is_valid_placement(player_board, r, c, size, orientation):
+                player_board = place_ship(player_board, r, c, size, orientation)
+                placed = True
             else:
-                print("Invalid placement. Ship overlaps, touches another ship, or goes off-board.")
-
-    return board
+                print("Invalid placement. Ship is out of bounds or overlaps another ship.")
+                
+    return player_board
